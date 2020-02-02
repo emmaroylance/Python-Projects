@@ -6,6 +6,17 @@ import sqlite3
 import shutil
 
 
+def database():
+    conn = sqlite3.connect('findTxt.db')
+
+    with conn:
+        cur = conn.cursor()
+        cur.execute("CREATE TABLE IF NOT EXISTS tbl_txt( \
+            ID INTEGER PRIMARY KEY AUTOINCREMENT, \
+            col_finame TEXT,  col_time INT \
+            )")
+        conn.commit()
+    conn.close()
 
 class ParentWindow(Frame):
     def __init__(self, master):
@@ -42,49 +53,29 @@ class ParentWindow(Frame):
 
 
     def findTxt(self):
-        for file in os.listdir(self.path1):
+        source = self.path1
+        destination = self.path2
+        sourceFiles = os.listdir(source)
+        for file in sourceFiles:
             if file.endswith(".txt"):
-                source = self.path1
-                destination = self.path2
-                shutil.move(source, destination)
-                fName = os.path.join(self.fPath2, file)
-                endTime = os.path.getmtime(self.fName)
-                print(file, self.endTime)
+                fName = os.path.join(source, file)
 
+                endTime = os.path.getmtime(fName)
+                conn = sqlite3.connect('findTxt.db')
 
-    def database(self):
-
-        conn = sqlite3.connect('findTxt.db')
-
-        with conn:
-            cur = conn.cursor()
-            cur.execute("CREATE TABLE IF NOT EXISTS tbl_txt( \
-                ID INTEGER PRIMARY KEY AUTOINCREMENT, \
-                col_finame TEXT,  col_time INT \
-                )")
-            conn.commit()
-        conn.close()
-
-        conn = sqlite3.connect('findTxt.db')
-
-        with conn:
-            cur = conn.cursor()
-            cur.execute("INSERT INTO tbl_files(col_finame, col_time) VALUES (?)", (self.fName, self.endTime))
-
-            conn.commit()
-        conn.close()
-
-        conn = sqlite3.connect('findTxt.db')
-
-        with conn:
-            cur = conn.cursor()
-            cur.execute("SELECT col_finame AND col_time FROM tbl_txt WHERE col_finame LIKE '%.txt'")
-            varFile = cur.fetchall()
-            print(varFile)
+                with conn:
+                    cur = conn.cursor()
+                    cur.execute("INSERT INTO tbl_txt(col_finame, col_time) VALUES (?, ?)", (fName, endTime))
+                    print("This is working")
+                    conn.commit()
+                conn.close()
+                shutil.move(fName, destination)
+                print(file, endTime)
 
 
 
 if __name__ == "__main__":
+    database()
     root = Tk()
     App = ParentWindow(root)
     root.mainloop()
